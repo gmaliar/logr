@@ -17,6 +17,7 @@ const TraceKey = "traceId"
 type Logr struct {
 	ctx    context.Context
 	Logger FieldLogr
+	logger *logrus.Logger
 }
 
 type FieldLogr interface {
@@ -59,10 +60,16 @@ func SetLevelFromEnv() {
 
 // WithCtx will return a logrus logger that will log Zipkin when logging.
 func WithCtx(ctx context.Context) *Logr {
-	return &Logr{ctx: ctx, Logger: defaultLogger(ctx)}
+	lg := logrus.StandardLogger()
+	return &Logr{ctx: ctx, Logger: applyContext(ctx, lg)}
 }
 
-func defaultLogger(ctx context.Context) FieldLogr {
+// NewWithLogger creates a new Logr from an existing logrus logger.
+func NewWithLogger(logger *logrus.Logger) *Logr {
+	return &Logr{logger: logger}
+}
+
+func applyContext(ctx context.Context, logger *logrus.Logger) FieldLogr {
 	fields := logrus.Fields{}
 
 	span := opentracing.SpanFromContext(ctx)
@@ -74,9 +81,13 @@ func defaultLogger(ctx context.Context) FieldLogr {
 		}
 	}
 
-	lg := logrus.StandardLogger()
-	lg.WithFields(fields)
-	return lg
+	return logger.WithFields(fields)
+}
+
+func (l *Logr) WithContext(ctx context.Context) *Logr {
+	l.ctx = ctx
+	l.Logger = applyContext(ctx, l.logger)
+	return l
 }
 
 // LogToTrace logs the msg to the tracing span with the level

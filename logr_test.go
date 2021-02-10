@@ -17,6 +17,11 @@ func TestLogr(t *testing.T) {
 	assert.NotNil(t, l)
 }
 
+func TestLogrWithDifferentLogger(t *testing.T) {
+	l := logr.NewWithLogger(logrus.StandardLogger()).WithContext(context.Background())
+	assert.NotNil(t, l)
+}
+
 func TestLogrWithZipkinContext(t *testing.T) {
 	tracer := mocktracer.New()
 	opentracing.SetGlobalTracer(tracer)
@@ -29,6 +34,23 @@ func TestLogrWithZipkinContext(t *testing.T) {
 	}))
 
 	l := logr.WithCtx(ctx)
+	l.Logger = fl
+	l.Infof(":aasdasd")
+	assert.NotNil(t, l)
+}
+
+func TestLogrWithDifferentLoggerZipkinContext(t *testing.T) {
+	tracer := mocktracer.New()
+	opentracing.SetGlobalTracer(tracer)
+	span := tracer.StartSpan("test_logger")
+	ctx := opentracing.ContextWithSpan(context.Background(), span)
+
+	fl := &logrfakes.FakeFieldLogger{}
+	fl.WithFieldsReturns(logrus.WithFields(logrus.Fields{
+		"animal": "walrus",
+	}))
+
+	l := logr.NewWithLogger(logrus.StandardLogger()).WithContext(ctx)
 	l.Logger = fl
 	l.Infof(":aasdasd")
 	assert.NotNil(t, l)
