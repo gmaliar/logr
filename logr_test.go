@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lileio/logr"
-	"github.com/lileio/logr/logrfakes"
+	"github.com/gmaliar/logr"
+	"github.com/gmaliar/logr/logrfakes"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/sirupsen/logrus"
